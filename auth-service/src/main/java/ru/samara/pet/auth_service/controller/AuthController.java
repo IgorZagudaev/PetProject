@@ -12,6 +12,8 @@ import ru.samara.pet.auth_service.dto.LoginRequest;
 import ru.samara.pet.auth_service.dto.RegisterRequest;
 import ru.samara.pet.auth_service.service.AuthService;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -21,14 +23,12 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        System.out.println("register");
         authService.register(request);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of("regStatus", "success", "regCount", 1));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        System.out.println("login");
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }

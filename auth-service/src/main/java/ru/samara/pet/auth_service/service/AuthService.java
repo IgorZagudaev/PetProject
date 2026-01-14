@@ -1,7 +1,6 @@
 package ru.samara.pet.auth_service.service;
 
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -11,16 +10,21 @@ import ru.samara.pet.auth_service.dto.LoginRequest;
 import ru.samara.pet.auth_service.dto.RegisterRequest;
 import ru.samara.pet.auth_service.model.User;
 import ru.samara.pet.auth_service.repository.UserRepository;
-import ru.samara.pet.auth_service.security.JwtUtil;
+import ru.samara.pet.security.JwtUtil;
 
 @Service
 @Transactional
-@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,JwtUtil jwtUtil) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+    }
 
     public void register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -47,7 +51,7 @@ public class AuthService {
                 .authorities(user.getRoles().toArray(new String[0]))
                 .build();
 
-        String token = jwtUtil.generateToken(userDetails);
+        String token = jwtUtil.generateToken(userDetails.getUsername(), userDetails.getAuthorities());
         return new AuthResponse(token);
     }
 }

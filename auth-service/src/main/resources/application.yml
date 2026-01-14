@@ -6,12 +6,15 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop  # Только для dev! В проде — validate или none
-    show-sql: true
+      ddl-auto: validate  # Только проверка структуры
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+    flyway:
+      enabled: true
+      baseline-on-migrate: true  # если БД уже существовала
 
 app:
   jwt:
