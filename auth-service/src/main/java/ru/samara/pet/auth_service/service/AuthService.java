@@ -33,7 +33,7 @@ public class AuthService {
 
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
     }
 
@@ -41,17 +41,18 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Неверные учетные данные"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Неверные учетные данные");
         }
 
         UserDetails userDetails = org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
-                .password(user.getPassword())
+                .password(user.getPasswordHash())
                 .authorities(user.getRoles().toArray(new String[0]))
                 .build();
 
-        String token = jwtUtil.generateToken(userDetails.getUsername(), userDetails.getAuthorities());
+        //String token = jwtUtil.generateToken(userDetails.getUsername(), userDetails.getAuthorities());
+        String token = jwtUtil.generateToken(user.getId().toString(), userDetails.getAuthorities());
         return new AuthResponse(token);
     }
 }

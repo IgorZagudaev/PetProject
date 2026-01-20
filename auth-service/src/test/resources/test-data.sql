@@ -1,0 +1,12 @@
+INSERT INTO users (id, email, password_hash)
+VALUES
+    ('11111111-1111-1111-1111-111111111111', 'admin@example.com', 'admin_hash'),
+    ('22222222-2222-2222-2222-222222222222', 'user@example.com', 'user_hash'),
+    ('33333333-3333-3333-3333-333333333333', 'moderator@example.com', 'mod_hash');
+
+INSERT INTO user_roles (user_id, role)
+VALUES
+    ('11111111-1111-1111-1111-111111111111', 'ROLE_ADMIN'),
+    ('11111111-1111-1111-1111-111111111111', 'ROLE_USER'),
+    ('22222222-2222-2222-2222-222222222222', 'ROLE_USER'),
+    ('33333333-3333-3333-3333-333333333333', 'ROLE_MODERATOR');

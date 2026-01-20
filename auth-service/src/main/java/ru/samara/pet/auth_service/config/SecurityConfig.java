@@ -25,7 +25,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtUtil commonJwtUtil(@Value("${app.jwt.secret}") String secret,
+    public JwtUtil jwtUtil(@Value("${app.jwt.secret}") String secret,
                            @Value("${app.jwt.expiration-ms}") long expirationMs) {
         return new JwtUtil(secret, expirationMs);
     }
@@ -35,12 +35,28 @@ public class SecurityConfig {
         return new JwtAuthFilter(jwtUtil);
     }
 
+    /**
+     * Configures the security filter chain for the application.
+     * <p>
+     * This method sets up HTTP security configurations including disabling CSRF,
+     * setting session management to stateless, configuring authorization rules,
+     * and adding a JWT authentication filter before the username/password authentication filter.
+     * </p>
+     *
+     * @param http the {@link HttpSecurity} to configure
+     * @param jwtAuthFilter the JWT authentication filter to add before {@link UsernamePasswordAuthenticationFilter}
+     * @return the built {@link SecurityFilterChain}
+     * @throws Exception if an error occurs during configuration
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            JwtAuthFilter jwtAuthFilter) throws Exception {
         http
+                // включаем CSRF
                 .csrf(csrf -> csrf.disable())
+                // отключаем сессии
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // авторизация
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
                         .anyRequest().authenticated()

@@ -1,8 +1,12 @@
 server:
-  port: 8080
+  port: 8082
+logging:
+  level:
+    org.springframework.security: DEBUG
+    ru.samara.pet.portfolio_service.security: DEBUG
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/auth_db
+    url: jdbc:postgresql://localhost:5432/portfolio_db
     username: postgres
     password: 1131
     driver-class-name: org.postgresql.Driver
