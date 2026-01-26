@@ -40,6 +40,12 @@ public class PortfolioController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/accounts/create")
+    public ResponseEntity<Void> createAccount(@RequestBody String request) {
+        System.out.println("Creating account: " + request);
+        return ResponseEntity.ok().build();
+    }
+
     public static class DepositRequest {
         private BigDecimal amount;
 

@@ -22,3 +22,7 @@ app:
   jwt:
     secret: l3eAT2bjCIsQ2mlDQVoIEBZZyWk4YqFaUqf6pUIvWKQ=
     expiration-ms: 86400000  # 24 часа
+
+services:
+  notification:
+    url: http://localhost:8082 # URL сервиса работы с кошельком
