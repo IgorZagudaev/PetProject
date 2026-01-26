@@ -1,11 +1,11 @@
 package ru.samara.pet.auth_service.model;
 
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 import ru.samara.pet.auth_service.model.dto.UserRegistered;
 
 import java.time.LocalDateTime;
@@ -33,6 +33,7 @@ CREATE TABLE outbox (
 public class Outbox {
 
     @Id
+    @GeneratedValue
     @Column(columnDefinition = "id")
     UUID id;
     @Column(name = "aggregate_type")
@@ -42,7 +43,7 @@ public class Outbox {
     @Column(name = "event_type")
     String eventType;
 
-    @Type(JsonBinaryType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "body",columnDefinition = "jsonb")
     UserRegistered body;
 

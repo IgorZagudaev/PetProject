@@ -1,4 +1,4 @@
-package ru.samara.pet.auth_service.dto;
+package ru.samara.pet.auth_service.model.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

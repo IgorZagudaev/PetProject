@@ -7,9 +7,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import ru.samara.pet.auth_service.dto.AuthResponse;
-import ru.samara.pet.auth_service.dto.LoginRequest;
-import ru.samara.pet.auth_service.dto.RegisterRequest;
+import ru.samara.pet.auth_service.model.dto.AuthResponse;
+import ru.samara.pet.auth_service.model.dto.LoginRequest;
+import ru.samara.pet.auth_service.model.dto.RegisterRequest;
 import ru.samara.pet.auth_service.model.User;
 import ru.samara.pet.auth_service.repository.UserRepository;
 import ru.samara.pet.security.JwtUtil;
@@ -120,7 +120,7 @@ class AuthServiceTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals("jwt-token", response.getToken());
+        assertEquals("jwt-token", response.token());
 
         verify(userRepository, times(1)).findByEmail(validLoginRequest.getEmail());
         verify(passwordEncoder, times(1)).matches(validLoginRequest.getPassword(), existingUser.getPasswordHash());
@@ -184,7 +184,7 @@ class AuthServiceTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals("jwt-token", response.getToken());
+        assertEquals("jwt-token", response.token());
     }
 
     // Тест на вход в систему с пустым email

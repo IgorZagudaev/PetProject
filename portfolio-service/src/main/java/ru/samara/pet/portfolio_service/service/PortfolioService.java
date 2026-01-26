@@ -1,6 +1,7 @@
 package ru.samara.pet.portfolio_service.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -55,18 +56,13 @@ public class PortfolioService {
         transaction.setAmount(amount);
         transaction.setStatus(Transaction.TransactionStatus.PENDING);
         transaction.setCreatedAt(Instant.now());
-
         transactionRepository.save(transaction);
 
         // 2. Обновляем баланс с оптимистичной блокировкой
         // JPA автоматически проверит @Version при вызове save()
         account.setBalance(account.getBalance().add(amount));
-        try {
-            accountRepository.save(account); // может выбросить OptimisticLockException
-        } catch (Exception e) {
-            // Откат транзакции произойдёт автоматически из-за @Transactional
-            throw new RuntimeException("Concurrent modification detected", e);
-        }
+        accountRepository.save(account); // может выбросить OptimisticLockException - ретрай повторит
+
 
         // 3. Помечаем транзакцию как завершённую
         transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
