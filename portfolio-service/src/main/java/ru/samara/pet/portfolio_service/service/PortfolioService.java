@@ -25,9 +25,9 @@ public class PortfolioService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
-    public List<Account> getUserAccounts() {
+    public Account getUserAccount() {
         UUID currentUserId = getCurrentUserId();
-        return accountRepository.findByUserId(currentUserId);
+        return accountRepository.findByUserId(currentUserId).get();
     }
 
     @Retryable(

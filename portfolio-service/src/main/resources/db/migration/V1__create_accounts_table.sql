@@ -1,7 +1,7 @@
 -- Создание таблицы счетов пользователей
 CREATE TABLE accounts (
     id UUID PRIMARY KEY,
-    user_id UUID NOT NULL,
+    user_id UUID NOT NULL UNIQUE,
     balance NUMERIC(38, 10) NOT NULL DEFAULT 0.0000000000,
     version BIGINT NOT NULL DEFAULT 0
 );

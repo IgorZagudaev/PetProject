@@ -79,16 +79,16 @@ public class User {
     @Column(name = "role")
     private Set<String> roles = new HashSet<>(Set.of("USER"));
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+//    @PrePersist
+//    protected void onCreate() {
+//        createdAt = LocalDateTime.now();
+//        updatedAt = LocalDateTime.now();
+//    }
+//
+//    @PreUpdate
+//    protected void onUpdate() {
+//        updatedAt = LocalDateTime.now();
+//    }
 
     // Enum для статусов
     public enum UserStatus {
