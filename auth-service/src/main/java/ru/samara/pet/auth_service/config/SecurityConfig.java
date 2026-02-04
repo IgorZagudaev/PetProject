@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -53,7 +54,7 @@ public class SecurityConfig {
                                            JwtAuthFilter jwtAuthFilter) throws Exception {
         http
                 // включаем CSRF
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 // отключаем сессии
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // авторизация
@@ -63,8 +64,8 @@ public class SecurityConfig {
                                 "/hallo/index").permitAll()
                         .anyRequest().authenticated()
                 )
-                .httpBasic(httpBasic -> httpBasic.disable()) // не используем Basic Auth
-                .formLogin(formLogin -> formLogin.disable()) // отключаем форму логина
+                .httpBasic(AbstractHttpConfigurer::disable) // не используем Basic Auth
+                .formLogin(AbstractHttpConfigurer::disable) // отключаем форму логина
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

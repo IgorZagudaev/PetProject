@@ -17,7 +17,10 @@ public class FeignRequestToCreateBankAccount implements RequestToCreateBankAccou
         System.out.println("Send request to create bank account with body: " + jsonBody);
 
         // Отправляем напрямую как строку — без парсинга!
-        ResponseEntity<Void> response = notificationClient.sendEvent(jsonBody);
+        ResponseEntity<String> response = notificationClient.sendEvent(jsonBody);
+
+        // ответ от p-s
+        System.out.println("Response body: " + response.getBody());
 
         if (response.getStatusCode().is2xxSuccessful()) {
             System.out.println("Request sent successfully");

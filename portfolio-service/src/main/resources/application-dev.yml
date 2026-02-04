@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: "portfolio-service-dev"
+logging:
+  execution-time:
+    enabled: true
+    threshold-ms: 10

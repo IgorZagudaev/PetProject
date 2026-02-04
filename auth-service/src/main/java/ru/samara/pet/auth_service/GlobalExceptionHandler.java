@@ -1,7 +1,5 @@
 package ru.samara.pet.auth_service;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,6 +11,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    public record ErrorResponse(String message, Map<String, String> details) {}
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -29,11 +29,4 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(ex.getMessage(), null));
     }
 
-
-    @AllArgsConstructor
-    @Getter
-    public static class ErrorResponse {
-        private final String message;
-        private final Map<String, String> details;
-    }
 }

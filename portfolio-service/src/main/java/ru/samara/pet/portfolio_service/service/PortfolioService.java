@@ -50,9 +50,10 @@ public class PortfolioService {
         }
 
         // 1. Создаём транзакцию в статусе PENDING
+
         Transaction transaction = new Transaction();
         transaction.setId(UUID.randomUUID());
-        transaction.setAccountId(accountId);
+        transaction.setAccount(account);
         transaction.setAmount(amount);
         transaction.setStatus(Transaction.TransactionStatus.PENDING);
         transaction.setCreatedAt(Instant.now());
@@ -60,14 +61,8 @@ public class PortfolioService {
 
         // 2. Обновляем баланс с оптимистичной блокировкой
         // JPA автоматически проверит @Version при вызове save()
-        account.setBalance(account.getBalance().add(amount));
+        //account.deposit(amount);
         accountRepository.save(account); // может выбросить OptimisticLockException - ретрай повторит
-
-
-        // 3. Помечаем транзакцию как завершённую
-        transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
-        transaction.setCompletedAt(Instant.now());
-        transactionRepository.save(transaction);
     }
 
     private UUID getCurrentUserId() {

@@ -13,6 +13,8 @@ import java.util.UUID;
 public interface AccountRepository  extends JpaRepository<Account, UUID> {
     Optional<Account> findByUserId(UUID userId);
 
+    Optional<Account> findById(UUID id);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE) // или можно без этого, если используем @Version + retry
     @Query("SELECT a FROM Account a WHERE a.id = :id")
     Account findWithLockById(UUID id);

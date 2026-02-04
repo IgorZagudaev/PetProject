@@ -14,5 +14,5 @@ public interface NotificationFeignClient {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    ResponseEntity<Void> sendEvent(@RequestBody String body);
+    ResponseEntity<String> sendEvent(@RequestBody String body);
 }
