@@ -1,5 +1,6 @@
 package ru.samara.pet.portfolio_service.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -47,6 +48,7 @@ public class Account {
     private Long version; // для оптимистичной блокировки
 
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Transaction> transactions = new ArrayList<>();
 
     @PrePersist

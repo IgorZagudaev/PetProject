@@ -64,10 +64,10 @@ public class PortfolioController {
         Account updatedAccount = null;
 
         if (Transaction.TransactionType.DEPOSIT.equals(request.transactionType())) {
-            updatedAccount = accountService.deposit(accountId, request);
+            updatedAccount = portfolioService.deposit(accountId, request);
         }
         if (Transaction.TransactionType.WITHDRAWAL.equals(request.transactionType())) {
-            updatedAccount = accountService.withdraw(accountId, request);
+            updatedAccount = portfolioService.withdraw(accountId, request);
         }
         if (updatedAccount==null) {
             throw new BusinessException("No such transaction type");
@@ -77,7 +77,7 @@ public class PortfolioController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/accounts")
+    @GetMapping("/current_accounts")
     public ResponseEntity<List<Account>> getUserAccounts() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         System.out.println("Authentication: " + auth);
@@ -87,22 +87,16 @@ public class PortfolioController {
             System.out.println("Principal: " + auth.getPrincipal());
             System.out.println("Authenticated: " + auth.isAuthenticated());
         }
-        return ResponseEntity.ok(List.of(portfolioService.getUserAccount()));
+        return ResponseEntity.ok(List.of(accountService.getUserAccount()));
     }
 
-    @PostMapping("/accounts/{accountId}/deposit")
-    public ResponseEntity<Void> deposit(@PathVariable UUID accountId,
-                                        @RequestBody DepositRequest request) {
-        portfolioService.deposit(accountId, request.getAmount());
-        return ResponseEntity.ok().build();
+    @GetMapping("/accounts")
+    public ResponseEntity<List<Account>> getAccounts() {
+        accountService.getAccounts().forEach(System.out::println);
+        return ResponseEntity.ok(accountService.getAccounts());
     }
 
 
 
-    @Setter
-    @Getter
-    public static class DepositRequest {
-        private BigDecimal amount;
 
-    }
 }

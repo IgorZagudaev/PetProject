@@ -1,83 +1,116 @@
 package ru.samara.pet.portfolio_service.service;
 
+import jakarta.persistence.OptimisticLockException;
 import lombok.AllArgsConstructor;
-import org.springframework.dao.OptimisticLockingFailureException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import ru.samara.pet.portfolio_service.exception.BusinessException;
+import ru.samara.pet.portfolio_service.log.annotation.LogExecutionTime;
 import ru.samara.pet.portfolio_service.model.Account;
 import ru.samara.pet.portfolio_service.model.Transaction;
+import ru.samara.pet.portfolio_service.model.dto.AccountBalanceUpdateRequest;
 import ru.samara.pet.portfolio_service.repository.AccountRepository;
 import ru.samara.pet.portfolio_service.repository.TransactionRepository;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class PortfolioService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
-    public Account getUserAccount() {
-        UUID currentUserId = getCurrentUserId();
-        return accountRepository.findByUserId(currentUserId).get();
-    }
-
+    @Transactional(timeout = 5)
+    @LogExecutionTime
     @Retryable(
-            value = {org.springframework.dao.OptimisticLockingFailureException.class},
+            retryFor = {
+                    PessimisticLockingFailureException.class,
+                    CannotAcquireLockException.class,
+                    OptimisticLockException.class
+            },
             maxAttempts = 3,
-            backoff = @Backoff(delay = 50)
+            backoff = @Backoff(delay = 50, multiplier = 2),
+            recover = "recoverDeposit"
     )
-    @Transactional
-    public void deposit(UUID accountId, BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Deposit amount must be positive");
+    public Account deposit(UUID accountId, AccountBalanceUpdateRequest request) {
+        if (request.amount() == null || request.amount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
         }
+        Account account = accountRepository.findByIdWithLock(accountId)
+                .orElseThrow(() -> new BusinessException("No such account"));
+        account.setBalance(account.getBalance().add(request.amount()));
 
-        UUID currentUserId = getCurrentUserId();
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
-
-        if (!account.getUserId().equals(currentUserId)) {
-            throw new SecurityException("Access denied");
-        }
-
-        // 1. Создаём транзакцию в статусе PENDING
-
-        Transaction transaction = new Transaction();
-        transaction.setId(UUID.randomUUID());
-        transaction.setAccount(account);
-        transaction.setAmount(amount);
-        transaction.setStatus(Transaction.TransactionStatus.PENDING);
-        transaction.setCreatedAt(Instant.now());
+        // Создаём запись транзакции
+        Transaction transaction = Transaction.builder()
+                .account(account)
+                .type(request.transactionType())
+                .amount(request.amount())
+                .status(Transaction.TransactionStatus.COMPLETED)
+                .build();
+        accountRepository.save(account);
         transactionRepository.save(transaction);
-
-        // 2. Обновляем баланс с оптимистичной блокировкой
-        // JPA автоматически проверит @Version при вызове save()
-        //account.deposit(amount);
-        accountRepository.save(account); // может выбросить OptimisticLockException - ретрай повторит
+        return account;
     }
 
-    private UUID getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new SecurityException("User not authenticated");
+    @Transactional(timeout = 5)
+    @LogExecutionTime
+    @Retryable(
+            retryFor = {
+                    PessimisticLockingFailureException.class,
+                    CannotAcquireLockException.class,
+                    OptimisticLockException.class
+            },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 50, multiplier = 2),
+            recover = "recoverWithdraw"
+    )
+    public Account withdraw(UUID accountId, AccountBalanceUpdateRequest request) {
+        if (request.amount() == null || request.amount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
         }
-        // Предполагается, что principal — это UUID строки или сам UUID
-        Object principal = auth.getPrincipal();
-        if (principal instanceof String) {
-            return UUID.fromString((String) principal);
-        } else if (principal instanceof UUID) {
-            return (UUID) principal;
-        } else {
-            throw new IllegalStateException("Unsupported principal type: " + principal.getClass());
+        Account account = accountRepository.findByIdWithLock(accountId)
+                .orElseThrow(() -> new BusinessException("No such account"));
+        if (account.getBalance().compareTo(request.amount()) < 0) {
+            throw new IllegalStateException("Insufficient funds");
         }
+
+        account.setBalance(account.getBalance().subtract(request.amount()));
+
+        // Создаём запись транзакции
+        Transaction transaction = Transaction.builder()
+                .account(account)
+                .type(request.transactionType())
+                .amount(request.amount())
+                .status(Transaction.TransactionStatus.COMPLETED)
+                .build();
+
+        accountRepository.save(account);
+        transactionRepository.save(transaction);
+        return account;
     }
+
+    @Recover
+    public void recoverWithdraw(Exception e, UUID accountId, BigDecimal amount) {
+        log.error("Не удалось выполнить операцию снятия {} со счёта {} после 3 попыток",
+                amount, accountId, e);
+        throw new BusinessException("Не удалось выполнить операцию снятия");
+    }
+
+    @Recover
+    public void recoverDeposit(Exception e, UUID accountId, BigDecimal amount) {
+        log.error("Не удалось выполнить операцию пополнения {} со счёта {} после 3 попыток",
+                amount, accountId, e);
+        throw new BusinessException("Не удалось выполнить операцию пополнения");
+    }
+
+
 }

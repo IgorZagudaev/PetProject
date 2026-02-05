@@ -42,7 +42,7 @@ public class SecurityConfig {
                 // авторизация
                 .authorizeHttpRequests(authz -> authz
                         //http://localhost:8082/api/v1/accounts/create
-                        .requestMatchers("/api/v1/accounts").authenticated()
+                        //.requestMatchers("/api/v1/accounts").authenticated()
                         .requestMatchers( "/api/v1/accounts/*/balance").authenticated()
 
                         .anyRequest().permitAll()
