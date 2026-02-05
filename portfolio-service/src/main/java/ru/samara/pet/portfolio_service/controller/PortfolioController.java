@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import ru.samara.pet.portfolio_service.exception.BusinessException;
+import ru.samara.pet.portfolio_service.log.annotation.LogExecutionTime;
 import ru.samara.pet.portfolio_service.mapper.AccountMapper;
 import ru.samara.pet.portfolio_service.model.Account;
 import ru.samara.pet.portfolio_service.model.Transaction;
 import ru.samara.pet.portfolio_service.model.dto.AccountBalanceUpdateRequest;
+import ru.samara.pet.portfolio_service.model.dto.AccountDTO;
 import ru.samara.pet.portfolio_service.model.dto.AccountResponse;
 import ru.samara.pet.portfolio_service.model.dto.CreateAccountCommand;
 import ru.samara.pet.portfolio_service.service.AccountService;
@@ -91,8 +93,9 @@ public class PortfolioController {
     }
 
     @GetMapping("/accounts")
-    public ResponseEntity<List<Account>> getAccounts() {
-        accountService.getAccounts().forEach(System.out::println);
+    @LogExecutionTime
+    public ResponseEntity<List<AccountDTO>> getAccounts() {
+        //accountService.getAccounts().forEach(System.out::println);
         return ResponseEntity.ok(accountService.getAccounts());
     }
 
