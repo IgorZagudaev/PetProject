@@ -25,10 +25,10 @@ public class CacheMonitoringService {
         Map<String, Object> stats = new HashMap<>();
 
         Set<String> keys = redisTemplate.keys("accounts::*");
-        stats.put("accountsCacheSize", keys != null ? keys.size() : 0);
+        stats.put("accountsCacheSize", keys.size());
 
         keys = redisTemplate.keys("account::*");
-        stats.put("accountCacheSize", keys != null ? keys.size() : 0);
+        stats.put("accountCacheSize", keys.size());
 
         // TTL для конкретного ключа
         Long ttl = redisTemplate.getExpire("accounts::all", TimeUnit.SECONDS);

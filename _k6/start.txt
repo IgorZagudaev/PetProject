@@ -1,0 +1,5 @@
+# Запуск из командной строки
+k6 run _k6/script.js
+
+# С визуализацией результатов
+k6 run --summary-time-unit=ms --summary-trend-stats=avg,min,med,max,p(95),p(99) _k6/script.js

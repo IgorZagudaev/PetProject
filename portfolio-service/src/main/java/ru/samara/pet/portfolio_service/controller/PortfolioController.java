@@ -4,14 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
 import ru.samara.pet.portfolio_service.exception.BusinessException;
 import ru.samara.pet.portfolio_service.log.annotation.LogExecutionTime;
 import ru.samara.pet.portfolio_service.mapper.AccountMapper;
@@ -24,7 +21,6 @@ import ru.samara.pet.portfolio_service.model.dto.CreateAccountCommand;
 import ru.samara.pet.portfolio_service.service.AccountService;
 import ru.samara.pet.portfolio_service.service.PortfolioService;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 

@@ -1,10 +1,8 @@
 package ru.samara.pet.auth_service.repository;
 
 
-import org.hibernate.annotations.processing.HQL;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import ru.samara.pet.auth_service.model.Outbox;
 
 import java.util.List;

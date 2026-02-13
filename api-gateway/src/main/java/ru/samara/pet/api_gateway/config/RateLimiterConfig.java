@@ -2,12 +2,12 @@ package ru.samara.pet.api_gateway.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
-import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import reactor.core.publisher.Mono;
+
+import java.util.Objects;
 
 @Configuration
 @Slf4j
@@ -48,7 +48,7 @@ public class RateLimiterConfig {
     @Bean
     public KeyResolver ipKeyResolver() {
         return exchange -> Mono.just(
-                exchange.getRequest().getRemoteAddress().getHostName()
+                Objects.requireNonNull(exchange.getRequest().getRemoteAddress()).getHostName()
         );
     }
 

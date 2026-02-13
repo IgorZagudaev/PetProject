@@ -2,7 +2,6 @@ package ru.samara.pet.portfolio_service.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.springframework.stereotype.Component;
 import ru.samara.pet.portfolio_service.model.Account;
 import ru.samara.pet.portfolio_service.model.dto.AccountResponse;
 

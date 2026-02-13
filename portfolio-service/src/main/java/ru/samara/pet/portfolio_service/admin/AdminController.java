@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Objects;
+
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
@@ -17,7 +19,7 @@ public class AdminController {
 
     @DeleteMapping("/cache/clear")
     public String clearCache() {
-        redisTemplate.getConnectionFactory().getConnection().flushDb();
+        Objects.requireNonNull(redisTemplate.getConnectionFactory()).getConnection().flushDb();
         return "Кеш очищен!";
     }
 
@@ -29,9 +31,7 @@ public class AdminController {
     @GetMapping("/cache/stat")
     public String getCacheStat() {
         StringBuilder result = new StringBuilder();
-        cacheMonitoringService.getCacheStats().forEach((k,v) -> {
-            result.append(k).append(" - ").append(v.toString()).append("\n");
-        } );
+        cacheMonitoringService.getCacheStats().forEach((k,v) -> result.append(k).append(" - ").append(v.toString()).append("\n"));
         return result.toString();
     }
 }

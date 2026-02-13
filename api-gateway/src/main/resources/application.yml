@@ -37,7 +37,7 @@ spring:
               args:
                 redis-rate-limiter.replenishRate: 1    # Скорость пополнения токенов (в сек)
                 redis-rate-limiter.burstCapacity: 10    # Максимальное количество токенов
-                redis-rate-limiter.requestedTokens: 10   # Токенов на запрос
+                redis-rate-limiter.requestedTokens: 1   # Токенов на запрос
                 key-resolver: "#{@compositeKeyResolver}"     # Бин для определения ключа
 
   redis:
@@ -56,3 +56,23 @@ logging:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.data.redis: DEBUG
     ru.samara.pet.api_gateway.config: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # может: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  server:
+    port: 9091  # отдельный порт для мониторинга
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  show-actuator: true

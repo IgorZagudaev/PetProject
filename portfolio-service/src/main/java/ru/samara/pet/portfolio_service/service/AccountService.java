@@ -1,7 +1,6 @@
 package ru.samara.pet.portfolio_service.service;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -19,7 +18,6 @@ import ru.samara.pet.portfolio_service.model.dto.AccountDTO;
 import ru.samara.pet.portfolio_service.model.dto.AccountResponse;
 import ru.samara.pet.portfolio_service.model.dto.CreateAccountCommand;
 import ru.samara.pet.portfolio_service.repository.AccountRepository;
-import ru.samara.pet.portfolio_service.repository.TransactionRepository;
 
 import java.util.List;
 import java.util.UUID;

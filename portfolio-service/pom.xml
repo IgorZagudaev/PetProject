@@ -21,6 +21,17 @@
 
     <dependencies>
 
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Основная зависимость для кеширования -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -128,10 +139,11 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- PostgreSQL Driver (или другой, в зависимости от БД) -->
+        <!-- PostgreSQL Driver  -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+            <version>42.7.7</version>
             <scope>runtime</scope>
         </dependency>
 
