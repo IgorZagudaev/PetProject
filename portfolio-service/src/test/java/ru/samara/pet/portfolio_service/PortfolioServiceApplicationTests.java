@@ -1,5 +1,6 @@
 package ru.samara.pet.portfolio_service;
 
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -7,7 +8,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.testcontainers.containers.PostgreSQLContainer;
-
+import ru.samara.pet.portfolio_service.security.JwtAuthenticationFilter;
+import ru.samara.pet.security.JwtUtil;
 
 
 @Testcontainers
@@ -30,6 +32,11 @@ class PortfolioServiceApplicationTests {
         // Отключаем миграции, если они есть, или используем test profile
         registry.add("spring.flyway.enabled", () -> true);
     }
+
+    @MockBean
+    private JwtUtil jwtUtil;
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     void contextLoads() {}
