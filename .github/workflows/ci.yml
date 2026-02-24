@@ -140,6 +140,10 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+            
+      # Приводим к lowercase
+      - name: Set lowercase repository owner
+        run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> ${GITHUB_ENV}
 
       # ── Auth Service ──
       - name: Build and push auth-service
@@ -148,7 +152,9 @@ jobs:
           context: .
           file: ./auth-service/_docker/auth-service.Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/auth-service:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/auth-service:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/auth-service:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -159,7 +165,9 @@ jobs:
           context: .
           file: ./portfolio-service/_docker/portfolio-service.Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/portfolio-service:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/portfolio-service:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/portfolio-service:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -170,7 +178,9 @@ jobs:
           context: .
           file: ./api-gateway/_docker/api-gateway.Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/api-gateway:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/api-gateway:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/api-gateway:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
