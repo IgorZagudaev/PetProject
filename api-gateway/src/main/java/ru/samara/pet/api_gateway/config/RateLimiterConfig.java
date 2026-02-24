@@ -24,6 +24,7 @@ public class RateLimiterConfig {
     // Лимит по пользователю и путь запроса
     @Bean
     public KeyResolver compositeKeyResolver() {
+        System.out.println("com");
         return exchange -> {
             String userId = exchange.getRequest().getHeaders().getFirst("X-User-ID");
             String path = exchange.getRequest().getPath().value();

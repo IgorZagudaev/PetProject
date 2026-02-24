@@ -1,226 +1,199 @@
 package ru.samara.pet.auth_service.service;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import ru.samara.pet.auth_service.model.Outbox;
+import ru.samara.pet.auth_service.model.User;
 import ru.samara.pet.auth_service.model.dto.AuthResponse;
 import ru.samara.pet.auth_service.model.dto.LoginRequest;
 import ru.samara.pet.auth_service.model.dto.RegisterRequest;
-import ru.samara.pet.auth_service.model.User;
+import ru.samara.pet.auth_service.model.dto.UserRegistered;
+import ru.samara.pet.auth_service.repository.OutboxRepository;
 import ru.samara.pet.auth_service.repository.UserRepository;
 import ru.samara.pet.security.JwtUtil;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import static java.util.Collections.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("AuthService тесты")
 class AuthServiceTest {
 
-    @Mock
-    UserRepository userRepository;
-    @Mock
-    JwtUtil jwtUtil;
-    @Mock
-    PasswordEncoder passwordEncoder;
+    @Mock private UserRepository userRepository;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private OutboxRepository outboxRepository;
+    @Mock private JwtUtil jwtUtil;
 
     @InjectMocks
     private AuthService authService;
 
-    private RegisterRequest validRegisterRequest;
-    private LoginRequest validLoginRequest;
-    private User existingUser;
-    private UUID userId;
+    @Nested
+    @DisplayName("Регистрация пользователя")
+    class RegisterTests {
 
-    @BeforeEach
-    void setUp() {
-        userId = UUID.randomUUID();
+        @Test
+        @DisplayName("Успешная регистрация создаёт пользователя и событие Outbox")
+        void register_success_createsUserAndOutboxEvent() {
+            // given
+            var email = "test@example.com";
+            var password = "password123";
+            var encodedPassword = "encoded_password";
+            var userId = UUID.randomUUID();
 
-        validRegisterRequest = new RegisterRequest();
-        validRegisterRequest.setEmail("test@example.com");
-        validRegisterRequest.setPassword("password123");
+            var request = new RegisterRequest(email, password);
+            var savedUser = new User();
+            savedUser.setId(userId);
+            savedUser.setEmail(email);
+            savedUser.setPasswordHash(encodedPassword);
 
-        validLoginRequest = new LoginRequest();
-        validLoginRequest.setEmail("test@example.com");
-        validLoginRequest.setPassword("password123");
+            given(userRepository.findByEmail(email)).willReturn(Optional.empty());
+            given(passwordEncoder.encode(password)).willReturn(encodedPassword);
+            given(userRepository.save(any(User.class))).willReturn(savedUser);
 
-        existingUser = new User();
-        existingUser.setId(userId);
-        existingUser.setEmail("test@example.com");
-        existingUser.setPasswordHash("encodedPassword");
-        existingUser.setRoles(Set.of("ROLE_USER"));
+            // when
+            authService.register(request);
+
+            // then
+            verify(userRepository).findByEmail(email);
+            verify(passwordEncoder).encode(password);
+            verify(userRepository).save(argThat(user ->
+                    user.getEmail().equals(email) &&
+                    user.getPasswordHash().equals(encodedPassword)
+            ));
+
+            // Проверяем сохранение события Outbox
+            ArgumentCaptor<Outbox> outboxCaptor = ArgumentCaptor.forClass(Outbox.class);
+            verify(outboxRepository).save(outboxCaptor.capture());
+            Outbox capturedOutbox = outboxCaptor.getValue();
+
+            assertThat(capturedOutbox.getAggregateId()).isEqualTo(userId);
+            assertThat(capturedOutbox.getAggregateType()).isEqualTo("auth service");
+            assertThat(capturedOutbox.getEventType()).isEqualTo("Registered user");
+            assertThat(capturedOutbox.getBody()).isInstanceOf(UserRegistered.class);
+            assertThat(((UserRegistered) capturedOutbox.getBody()).uuid()).isEqualTo(userId);
+        }
+
+        @Test
+        @DisplayName("Регистрация с существующим email выбрасывает исключение")
+        void register_emailAlreadyExists_throwsException() {
+            // given
+            var email = "existing@example.com";
+            var request = new RegisterRequest(email, "password123");
+
+            given(userRepository.findByEmail(email))
+                    .willReturn(Optional.of(new User()));
+
+            // when & then
+            assertThatThrownBy(() -> authService.register(request))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Пользователь с таким email уже существует");
+
+            verify(userRepository).findByEmail(email);
+            verify(passwordEncoder, never()).encode(any());
+            verify(userRepository, never()).save(any());
+            verify(outboxRepository, never()).save(any());
+        }
     }
 
-    // Тест на регистрацию нового пользователя с новым email
-    @Test
-    void register_WithNewEmail_Success() {
-        // Мокируем методы
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    @Nested
+    @DisplayName("Авторизация пользователя")
+    class LoginTests {
 
-        // Выполнение теста
-        authService.register(validRegisterRequest);
+        @Test
+        @DisplayName("Успешный вход возвращает JWT-токен")
+        void login_success_returnsAuthResponse() {
+            // given
+            var email = "test@example.com";
+            var password = "password123";
+            var encodedPassword = "encoded_password";
+            var userId = UUID.randomUUID();
+            var token = "jwt.token.here";
+            var roles = Set.of("ROLE_USER");
 
-        // Проверка результатов
-        verify(userRepository, times(1)).findByEmail(validRegisterRequest.getEmail());
-        verify(passwordEncoder, times(1)).encode(validRegisterRequest.getPassword());
-        verify(userRepository, times(1)).save(any(User.class));
-    }
+            var user = new User();
+            user.setId(userId);
+            user.setEmail(email);
+            user.setPasswordHash(encodedPassword);
+            user.setRoles(roles);
 
-    // Тест на регистрацию нового пользователя с существующим email
-    @Test
-    void register_WithExistingEmail_ThrowsException() {
-        // Arrange
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(existingUser));
+            var request = new LoginRequest(email, password);
 
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> authService.register(validRegisterRequest));
+            given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+            given(passwordEncoder.matches(password, encodedPassword)).willReturn(true);
+            given(jwtUtil.generateToken(eq(userId.toString()), any())).willReturn(token);
 
-        assertEquals("Пользователь с таким email уже существует", exception.getMessage());
-        verify(userRepository, times(1)).findByEmail(validRegisterRequest.getEmail());
-        verify(userRepository, never()).save(any(User.class));
-    }
+            // when
+            AuthResponse response = authService.login(request);
 
-    // Тест на регистрацию нового пользователя с невалидными данными
-    @Test
-    void register_WithInvalidData_ThrowsException() {
-        // Arrange
-        RegisterRequest invalidRequest = new RegisterRequest();
-        invalidRequest.setEmail("invalid-email");
-        invalidRequest.setPassword("");
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.token()).isEqualTo(token);
 
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+            verify(userRepository).findByEmail(email);
+            verify(passwordEncoder).matches(password, encodedPassword);
+            verify(jwtUtil).generateToken(eq(userId.toString()), any());
+        }
 
-        // Act & Assert
-        // Здесь можно добавить проверку валидации, если она есть в сервисе
-        // Пока просто проверяем, что метод вызывается без исключений
-        assertDoesNotThrow(() -> authService.register(invalidRequest));
-    }
+        @Test
+        @DisplayName("Вход с несуществующим email выбрасывает исключение")
+        void login_userNotFound_throwsException() {
+            // given
+            var email = "notfound@example.com";
+            var request = new LoginRequest(email, "password123");
 
-    // Тест на вход в систему с валидными данными
-    @Test
-    void login_WithValidCredentials_ReturnsAuthResponse() {
-        // Arrange
-        when(userRepository.findByEmail(validLoginRequest.getEmail())).thenReturn(Optional.of(existingUser));
-        when(passwordEncoder.matches(validLoginRequest.getPassword(), existingUser.getPasswordHash())).thenReturn(true);
-        when(jwtUtil.generateToken(anyString(), anyCollection())).thenReturn("jwt-token");
+            given(userRepository.findByEmail(email)).willReturn(Optional.empty());
 
-        // Act
-        AuthResponse response = authService.login(validLoginRequest);
+            // when & then
+            assertThatThrownBy(() -> authService.login(request))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Неверные учетные данные");
 
-        // Assert
-        assertNotNull(response);
-        assertEquals("jwt-token", response.token());
+            verify(userRepository).findByEmail(email);
+            verify(passwordEncoder, never()).matches(any(), any());
+            verify(jwtUtil, never()).generateToken(any(), any());
+        }
 
-        verify(userRepository, times(1)).findByEmail(validLoginRequest.getEmail());
-        verify(passwordEncoder, times(1)).matches(validLoginRequest.getPassword(), existingUser.getPasswordHash());
-        verify(jwtUtil, times(1)).generateToken(anyString(), anyCollection());
-    }
+        @Test
+        @DisplayName("Вход с неверным паролем выбрасывает исключение")
+        void login_wrongPassword_throwsException() {
+            // given
+            var email = "test@example.com";
+            var rawPassword = "wrong_password";
+            var encodedPassword = "encoded_correct_password";
+            var userId = UUID.randomUUID();
 
-    // Тест на вход в систему с невалидными данными
-    @Test
-    void login_WithInvalidEmail_ThrowsException() {
-        // Arrange
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+            var user = new User();
+            user.setId(userId);
+            user.setEmail(email);
+            user.setPasswordHash(encodedPassword);
 
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> authService.login(validLoginRequest));
+            var request = new LoginRequest(email, rawPassword);
 
-        assertEquals("Неверные учетные данные", exception.getMessage());
-        verify(userRepository, times(1)).findByEmail(validLoginRequest.getEmail());
-        verify(passwordEncoder, never()).matches(anyString(), anyString());
-        verify(jwtUtil, never()).generateToken(anyString(), any());
-    }
+            given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+            given(passwordEncoder.matches(rawPassword, encodedPassword)).willReturn(false);
 
-    // Тест на вход в систему с невалидным паролем
-    @Test
-    void login_WithInvalidPassword_ThrowsException() {
-        // Arrange
-        when(userRepository.findByEmail(validLoginRequest.getEmail()))
-                .thenReturn(Optional.of(existingUser));
-        when(passwordEncoder.matches(validLoginRequest.getPassword(), existingUser.getPasswordHash()))
-                .thenReturn(false);
+            // when & then
+            assertThatThrownBy(() -> authService.login(request))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Неверные учетные данные");
 
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> authService.login(validLoginRequest));
-
-        assertEquals("Неверные учетные данные", exception.getMessage());
-        verify(userRepository, times(1)).findByEmail(validLoginRequest.getEmail());
-        verify(passwordEncoder, times(1)).matches(validLoginRequest.getPassword(), existingUser.getPasswordHash());
-        verify(jwtUtil, never()).generateToken(anyString(), any());
-    }
-
-    // Тест на вход в систему с пользователем без ролей
-    @Test
-    void login_WithUserWithoutRoles_ReturnsToken() {
-        // Arrange
-        User userWithoutRoles = new User();
-        userWithoutRoles.setId(userId);
-        userWithoutRoles.setEmail("test@example.com");
-        userWithoutRoles.setPasswordHash("encodedPassword");
-        userWithoutRoles.setRoles(EMPTY_SET);
-
-        when(userRepository.findByEmail(validLoginRequest.getEmail()))
-                .thenReturn(Optional.of(userWithoutRoles));
-        when(passwordEncoder.matches(validLoginRequest.getPassword(), userWithoutRoles.getPasswordHash()))
-                .thenReturn(true);
-        when(jwtUtil.generateToken(anyString(), any()))
-                .thenReturn("jwt-token");
-
-        // Act
-        AuthResponse response = authService.login(validLoginRequest);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals("jwt-token", response.token());
-    }
-
-    // Тест на вход в систему с пустым email
-    @Test
-    void login_WithNullEmail_ThrowsException() {
-        // Arrange
-        LoginRequest requestWithNullEmail = new LoginRequest();
-        requestWithNullEmail.setEmail(null);
-        requestWithNullEmail.setPassword("password");
-
-        // Act & Assert
-        // Здесь можно ожидать NullPointerException или другое поведение в зависимости от реализации
-        // В текущей реализации будет RuntimeException из-за Optional.empty()
-        when(userRepository.findByEmail(null)).thenReturn(Optional.empty());
-
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> authService.login(requestWithNullEmail));
-
-        assertEquals("Неверные учетные данные", exception.getMessage());
-    }
-
-    // Тест на вход в систему с пустым паролем
-    @Test
-    void login_WithEmptyPassword_ThrowsException() {
-        // Arrange
-        LoginRequest requestWithEmptyPassword = new LoginRequest();
-        requestWithEmptyPassword.setEmail("test@example.com");
-        requestWithEmptyPassword.setPassword("");
-
-        when(userRepository.findByEmail(requestWithEmptyPassword.getEmail())).thenReturn(Optional.of(existingUser));
-        when(passwordEncoder.matches("", existingUser.getPasswordHash())).thenReturn(false);
-
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> authService.login(requestWithEmptyPassword));
-
-        assertEquals("Неверные учетные данные", exception.getMessage());
+            verify(userRepository).findByEmail(email);
+            verify(passwordEncoder).matches(rawPassword, encodedPassword);
+            verify(jwtUtil, never()).generateToken(any(), any());
+        }
     }
 }

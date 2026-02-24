@@ -18,7 +18,7 @@ spring:
             allowCredentials: true
       routes:
         - id: auth-service
-          uri: http://localhost:8080
+          uri: ${AUTH_SERVICE:http://localhost:8080}
           predicates:
             - Path=/api/v1/auth/**
           filters:
@@ -29,7 +29,7 @@ spring:
                 redis-rate-limiter.requestedTokens: 1   # Токенов на запрос
                 key-resolver: "#{@userKeyResolver}"     # Бин для определения ключа
         - id: user-service
-          uri: http://localhost:8082
+          uri: ${AUTH_PORTFOLIO:http://localhost:8082}
           predicates:
             - Path=/api/v1/accounts/**
           filters:
@@ -40,16 +40,12 @@ spring:
                 redis-rate-limiter.requestedTokens: 1   # Токенов на запрос
                 key-resolver: "#{@compositeKeyResolver}"     # Бин для определения ключа
 
-  redis:
-    host: localhost
-    port: 6379
-    database: 0
-    timeout: 5000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      database: 0
+      timeout: 5000ms
 
 logging:
   level:
@@ -57,6 +53,7 @@ logging:
     org.springframework.data.redis: DEBUG
     ru.samara.pet.api_gateway.config: DEBUG
 
+# actuator
 management:
   endpoints:
     web:
@@ -69,6 +66,7 @@ management:
   server:
     port: 9091  # отдельный порт для мониторинга
 
+# swagger
 springdoc:
   api-docs:
     path: /api-docs

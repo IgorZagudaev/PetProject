@@ -41,4 +41,15 @@
         </dependencies>
     </dependencyManagement>
 
+    <profiles>
+        <profile>
+            <id>docker-build</id>
+            <modules>
+                <module>common</module>
+                <module>api-gateway</module>
+            </modules>
+        </profile>
+
+    </profiles>
+
 </project>

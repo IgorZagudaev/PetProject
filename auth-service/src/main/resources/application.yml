@@ -1,10 +1,13 @@
 server:
   port: 8080
 spring:
+  threads:
+    virtual:
+      enabled: true  # для Tomcat
   datasource:
-    url: jdbc:postgresql://localhost:5432/auth_db
-    username: postgres
-    password: 1131
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/auth_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:1131}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -25,7 +28,7 @@ app:
 
 services:
   notification:
-    url: http://localhost:8082 # URL сервиса работы с кошельком
+    url: ${AUTH_PORTFOLIO:http://localhost:8082}  # URL сервиса работы с кошельком
 
 management:
   endpoints:

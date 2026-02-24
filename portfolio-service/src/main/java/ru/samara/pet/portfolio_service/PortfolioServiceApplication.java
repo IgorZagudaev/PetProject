@@ -11,7 +11,7 @@ public class PortfolioServiceApplication {
         ConfigurableApplicationContext context = SpringApplication.run(PortfolioServiceApplication.class, args);
         String applicationName = context.getEnvironment()
                 .getProperty("spring.application.name", "portfolio-service-default");
-        System.out.println("✓✓✓✓✓ " + applicationName + " started successfully! ✓✓✓✓✓");
+        System.out.println("✓✓✓✓✓ " + applicationName + " started successfully! v.1.999 ✓✓✓✓✓");
     }
 
 }

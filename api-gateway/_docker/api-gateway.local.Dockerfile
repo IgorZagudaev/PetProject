@@ -1,5 +1,5 @@
 # Stage 1: Build with Maven + JDK 21
-FROM maven:3.9-eclipse-temurin-21 AS builder
+FROM maven@sha256:c3c9d3ac4ce8431a3995c0318b8d390f448e693dd4fabc16e9b68d2e1f3d7b46 AS builder
 
 WORKDIR /app
 
@@ -23,7 +23,7 @@ COPY api-gateway/src api-gateway/src
 RUN mvn clean package -DskipTests -pl api-gateway -am
 
 # Stage 2: Runtime
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin@sha256:6ad8ed080d9be96b61438ec3ce99388e294af216ed57356000c06070e85c5d5d
 
 WORKDIR /app
 

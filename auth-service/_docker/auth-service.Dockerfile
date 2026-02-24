@@ -17,18 +17,20 @@ RUN mvn dependency:go-offline -B
 
 # 3. Копируем исходный код только для нужных модулей
 COPY common/src common/src
-COPY api-gateway/src api-gateway/src
+COPY auth-service/src auth-service/src
 
 # 4. Собираем проект
-RUN mvn clean package -DskipTests -pl api-gateway -am
+RUN mvn clean package -DskipTests -pl auth-service -am
 
-# Stage 2: Runtime
+
+# Stage 2: Runtime (только JRE)
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app/api-gateway/target/*.jar app.jar
+# Копируем готовый JAR
+COPY --from=builder /app/auth-service/target/*.jar app.jar
 
-EXPOSE 8081 9091
+EXPOSE 8080 9090
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

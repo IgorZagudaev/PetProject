@@ -2,6 +2,7 @@ package ru.samara.pet.auth_service.service;
 
 
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,8 +18,11 @@ import ru.samara.pet.auth_service.repository.UserRepository;
 import ru.samara.pet.security.JwtUtil;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthService {
+
+    private static final String AGGREGATE_TYPE = "auth service";
+    private static final String EVENT_TYPE_REGISTERED = "Registered user";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -35,14 +39,14 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        userRepository.save(user);
+        user = userRepository.save(user);
 
         // Transactional Outbox
         UserRegistered userRegistered = new UserRegistered(user.getId());
         Outbox outbox = new Outbox();
         outbox.setAggregateId(user.getId());
-        outbox.setAggregateType("auth service");
-        outbox.setEventType("Registered user");
+        outbox.setAggregateType(AGGREGATE_TYPE);
+        outbox.setEventType(EVENT_TYPE_REGISTERED);
         outbox.setBody(userRegistered);
         outboxRepository.save(outbox);
 

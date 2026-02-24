@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres-auth:
+    image: postgres:15
+    container_name: postgres-auth
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1131
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: ../..        # 2 уровня вверх до investment-platform/
+      dockerfile: ./auth-service/_docker/auth-service.Dockerfile
+    container_name: auth-service
+    ports:
+      - "8080:8080"
+      - "9090:9090"  # Actuator
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-auth:5432/auth_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=1131
+      - FLYWAY_ENABLED=true
+
+volumes:
+  postgres_auth_data:
