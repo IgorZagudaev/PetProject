@@ -1,5 +1,9 @@
 name: Investment CI
 
+permissions:
+  contents: read
+  packages: write  # Разрешение на публикацию в GHCR
+
 on:
   push:
     branches: [ "main", "master" ]
