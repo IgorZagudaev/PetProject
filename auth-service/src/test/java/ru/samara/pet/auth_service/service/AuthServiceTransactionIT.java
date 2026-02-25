@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @Testcontainers
 @DisplayName("Интеграционные тесты: транзакционность Outbox")
-class AuthServiceTransactionIntegrationTest {
+class AuthServiceTransactionIT {
 
     // 🐳 Поднимаем PostgreSQL в Docker для тестов
     @Container

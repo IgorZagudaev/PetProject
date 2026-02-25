@@ -99,7 +99,7 @@ jobs:
       - name: Run Integration Tests (with Testcontainers)
         run: mvn -B verify -Pintegration-test
         env:
-          # Переопределяем порты для тестов, если используете Testcontainers
+          # Переопределяем порты для Testcontainers
           SPRING_DATASOURCE_URL_AUTH: jdbc:postgresql://localhost:5433/auth_db
           SPRING_DATASOURCE_URL_PORTFOLIO: jdbc:postgresql://localhost:5435/portfolio_db
           SPRING_REDIS_HOST: localhost
