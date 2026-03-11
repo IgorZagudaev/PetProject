@@ -5,6 +5,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import ru.samara.pet.auth_service.model.dto.CreateAccountCommand;
+import ru.samara.pet.auth_service.model.dto.RegisterRequest;
 
 @FeignClient(name = "notification-service", url = "${services.notification.url:http://localhost:8082}")
 public interface NotificationFeignClient {
@@ -14,5 +16,5 @@ public interface NotificationFeignClient {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    ResponseEntity<String> sendEvent(@RequestBody String body);
+    ResponseEntity<String> sendEvent(@RequestBody CreateAccountCommand createAccountCommand);
 }

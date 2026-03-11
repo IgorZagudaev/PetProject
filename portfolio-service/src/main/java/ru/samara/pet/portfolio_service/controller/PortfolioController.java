@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +28,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1")
 @AllArgsConstructor
+@Slf4j
 public class PortfolioController {
 
     private final PortfolioService portfolioService;
@@ -34,11 +36,18 @@ public class PortfolioController {
     private final AccountMapper accountMapper;
 
     @PostMapping("/accounts/create")
-    public ResponseEntity<AccountResponse> createAccount(@RequestBody JsonNode request) {
-        System.out.println("Creating account: " + request);
-        UUID userId = UUID.fromString(request.get("uuid").asText());
-        AccountResponse accountResponse = accountService.createAccount(new CreateAccountCommand(userId));
-        return ResponseEntity.status(HttpStatus.CREATED).body(accountResponse);
+    public ResponseEntity<AccountResponse> createAccount(@RequestBody CreateAccountCommand createAccountCommand) {
+        log.info("Creating account v1: {}", createAccountCommand.userId());
+
+        try {
+            AccountResponse accountResponse = accountService.createAccount(createAccountCommand);
+            return ResponseEntity.status(HttpStatus.CREATED).body(accountResponse);
+        } catch (Exception er) {
+            log.error("createAccount - {}",String.valueOf(er));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+
     }
 
     /*
@@ -53,10 +62,10 @@ public class PortfolioController {
             @PathVariable @NotNull UUID accountId,
             @Valid @RequestBody AccountBalanceUpdateRequest request) {
 
-        System.out.println("update balance: " + request);
+        log.info("update balance: {}", request);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
-            System.out.println("NO AUTHENTICATION!");
+            log.info("NO AUTHENTICATION!");
             throw new SecurityException("NO AUTHENTICATION!");
         }
         Account updatedAccount = null;
@@ -78,12 +87,12 @@ public class PortfolioController {
     @GetMapping("/current_accounts")
     public ResponseEntity<List<Account>> getUserAccounts() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("Authentication: " + auth);
+        log.info("Authentication: {}", auth);
         if (auth == null) {
             System.out.println("NO AUTHENTICATION!");
         } else {
-            System.out.println("Principal: " + auth.getPrincipal());
-            System.out.println("Authenticated: " + auth.isAuthenticated());
+            log.info("Principal: {}", auth.getPrincipal());
+            log.info("Authenticated: {}", auth.isAuthenticated());
         }
         return ResponseEntity.ok(List.of(accountService.getUserAccount()));
     }

@@ -72,6 +72,7 @@
     <build>
         <pluginManagement>
             <plugins>
+<!--                интеграционное тестирование-->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
@@ -81,6 +82,21 @@
                             <include>**/*IT.java</include>
                             <include>**/*ITCase.java</include>
                         </includes>
+                    </configuration>
+                </plugin>
+
+<!--                проверка стиля -->
+                <plugin>
+                    <groupId>com.diffplug.spotless</groupId>
+                    <artifactId>spotless-maven-plugin</artifactId>
+                    <version>2.43.0</version>
+                    <configuration>
+                        <java>
+                            <googleJavaFormat>
+                                <version>1.19.2</version>
+                                <style>GOOGLE</style>
+                            </googleJavaFormat>
+                        </java>
                     </configuration>
                 </plugin>
             </plugins>

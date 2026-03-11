@@ -1,9 +1,8 @@
 version: '3.8'
 
 services:
-  postgres-portfolio:
+  postgres-portfolio-alone:
     image: postgres:15
-    container_name: postgres-portfolio
     environment:
       POSTGRES_DB: portfolio_db
       POSTGRES_USER: postgres
@@ -11,43 +10,41 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - postgres_portfolio_data:/var/lib/postgresql/data
+      - postgres_portfolio_alone_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  redis:
+  redis-alone:
     image: redis:7-alpine
-    container_name: redis-shared
     ports:
       - "6679:6379"
     volumes:
-      - redis_data:/data
+      - redis_alone_data:/data
 
-  portfolio-service:
+  portfolio-service-alone:
     build:
       context: ../..        # 2 уровня вверх до investment-platform/
-      dockerfile: ./portfolio-service/_docker/portfolio-service.Dockerfile
-    container_name: portfolio-service
+      dockerfile: ./portfolio-service/_docker/portfolio-service.local.Dockerfile
     ports:
       - "8082:8082"
-      - "9092:9092"  # Actuator
+      - "9089:9082"  # Actuator
     depends_on:
-      postgres-portfolio:
+      postgres-portfolio-alone:
         condition: service_healthy
-      redis:
+      redis-alone:
         condition: service_started
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-portfolio:5432/portfolio_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-portfolio-alone:5432/portfolio_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=1131
-      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_HOST=redis-alone
       - SPRING_REDIS_PORT=6379
       - FLYWAY_ENABLED=true
 
 volumes:
-  postgres_portfolio_data:
-  redis_data:
+  postgres_portfolio_alone_data:
+  redis_alone_data:

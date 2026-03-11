@@ -99,16 +99,16 @@ public class PortfolioService {
     }
 
     @Recover
-    public void recoverWithdraw(Exception e, UUID accountId, BigDecimal amount) {
-        log.error("Не удалось выполнить операцию снятия {} со счёта {} после 3 попыток",
-                amount, accountId, e);
+    public void recoverWithdraw(Exception e, UUID accountId, AccountBalanceUpdateRequest request) {
+        log.error("Не удалось выполнить операцию снятия {} со счёта {} после 3 попыток ",
+                request.amount(), accountId, e);
         throw new BusinessException("Не удалось выполнить операцию снятия");
     }
 
     @Recover
-    public void recoverDeposit(Exception e, UUID accountId, BigDecimal amount) {
+    public void recoverDeposit(Exception e, UUID accountId, AccountBalanceUpdateRequest request) {
         log.error("Не удалось выполнить операцию пополнения {} со счёта {} после 3 попыток",
-                amount, accountId, e);
+                request.amount(), accountId, e);
         throw new BusinessException("Не удалось выполнить операцию пополнения");
     }
 

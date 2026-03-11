@@ -1,29 +1,32 @@
 package ru.samara.pet.auth_service.service.integration;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import ru.samara.pet.auth_service.model.dto.CreateAccountCommand;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class FeignRequestToCreateBankAccount implements RequestToCreateBankAccount {
 
     private final NotificationFeignClient notificationClient;
 
     @Override
-    public void sendRequestToCreateBankAccount(String jsonBody) {
-        System.out.println("Send request to create bank account with body: " + jsonBody);
+    public void sendRequestToCreateBankAccount(CreateAccountCommand createAccountCommand) {
+        log.info("Send request to create bank account : {}", createAccountCommand.userId());
 
         // Отправляем напрямую как строку — без парсинга!
-        ResponseEntity<String> response = notificationClient.sendEvent(jsonBody);
+        ResponseEntity<String> response = notificationClient.sendEvent(createAccountCommand);
 
         // ответ от p-s
-        System.out.println("Response body: " + response.getBody());
+        log.info("Response body: {}", response.getBody());
 
         if (response.getStatusCode().is2xxSuccessful()) {
-            System.out.println("Request sent successfully");
+            log.info("Request sent successfully");
         } else {
-            System.out.println("Request failed with status code: " + response.getStatusCode());
+            log.info("Request failed with status code: {}", response.getStatusCode());
             // пробросить исключение выше
             throw new RuntimeException("Request failed with status code: " + response.getStatusCode());
         }

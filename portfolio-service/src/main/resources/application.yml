@@ -54,7 +54,7 @@ management:
     health:
       show-details: always
   server:
-    port: 9092  # отдельный порт для мониторинга
+    port: 9082  # отдельный порт для мониторинга
 
 springdoc:
   api-docs:

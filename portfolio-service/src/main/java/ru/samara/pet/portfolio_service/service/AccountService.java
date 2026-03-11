@@ -79,12 +79,15 @@ public class AccountService {
     @LogExecutionTime
     @CacheEvict(value = "accounts", key = "'all'")
     public AccountResponse createAccount(CreateAccountCommand command) {
+        log.info("createAccount service:");
         // Идемпотентность: не создаём аккаунт дважды
         if (accountRepository.findByUserId(command.userId()).isPresent()) {
+            log.info("Email уже существует");
             throw new BusinessException("Email уже существует");
         }
         Account account = new Account(command.userId());
         Account savedAccount = accountRepository.save(account);
+        log.info("createAccount save success");
 
         // Преобразование в ответ
         return accountMapper.toResponse(savedAccount);

@@ -9,7 +9,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface OutboxRepository extends JpaRepository<Outbox, UUID> {
-    @Query(value = "SELECT * FROM outbox WHERE processed=false ORDER BY created_at ASC LIMIT 100 ",
+    @Query(value = "SELECT id, aggregate_type, aggregate_id, event_type, body, " +
+                   "created_at, updated_at, processed" +
+                   " FROM outbox WHERE processed=false " +
+                   "ORDER BY created_at ASC LIMIT 100 ",
             nativeQuery = true)
     List<Outbox> find100ToProcess();
 }

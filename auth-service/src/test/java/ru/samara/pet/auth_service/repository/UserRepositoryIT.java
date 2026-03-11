@@ -23,10 +23,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @DataJpaTest
 @Testcontainers
-@ContextConfiguration(initializers = {UserRepositoryTest.Initializer.class})
+@ContextConfiguration(initializers = {UserRepositoryIT.Initializer.class})
 @DisplayName("Тесты репозитория пользователей с PostgreSQL")
 @Sql("/test-data.sql")
-class UserRepositoryTest {
+class UserRepositoryIT {
 
     @Container
     public static PostgreSQLContainer<?> postgresqlContainer = new PostgreSQLContainer<>("postgres:15")

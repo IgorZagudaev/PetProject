@@ -1,9 +1,6 @@
-version: '3.8'
-
 services:
-  postgres-auth:
+  postgres-auth-alone:
     image: postgres:15
-    container_name: postgres-auth
     environment:
       POSTGRES_DB: auth_db
       POSTGRES_USER: postgres
@@ -11,30 +8,71 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - postgres_auth_data:/var/lib/postgresql/data
+      - postgres-auth-alone_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  auth-service:
+  auth-service-alone:
     build:
       context: ../..        # 2 уровня вверх до investment-platform/
-      dockerfile: ./auth-service/_docker/auth-service.Dockerfile
-    container_name: auth-service
+      dockerfile: ./auth-service/_docker/auth-service.local.Dockerfile
     ports:
       - "8080:8080"
       - "9090:9090"  # Actuator
     depends_on:
-      postgres-auth:
+      postgres-auth-alone:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-auth:5432/auth_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-auth-alone:5432/auth_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=1131
       - FLYWAY_ENABLED=true
 
+  kafka-auth-alone:
+    image: apache/kafka:latest
+    ports:
+      - "9092:9092"
+    environment:
+      # -- Настройки узла
+      KAFKA_NODE_ID: 1
+      # Роли
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      # Контроллер
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:9093'
+
+      # -- Слушатели
+      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:9093'
+      # Адреса
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092'
+      # Сетевые протоколы
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      # Настройки контроллера
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      # Настройки интерфейса брокера
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+
+      # -- Прочее
+      # Настройки топика оффсетов
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # Настройки топика транзакций
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Настройки топика состояния транзакций
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+  kafka-ui-auth-alone:
+      image: provectuslabs/kafka-ui:latest
+      ports:
+        - "7070:7070"
+      environment:
+        - KAFKA_CLUSTERS_0_NAME=local
+        - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      depends_on:
+        - kafka-auth-alone
+
 volumes:
-  postgres_auth_data:
+  postgres-auth-alone_data:
