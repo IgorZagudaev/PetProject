@@ -7,7 +7,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.type.mapping: event:ru.samara.pet.auth_service.model.dto.RegisterRequest
+        spring.json.type.mapping: event:ru.samara.pet.auth_service.model.dto.CreateAccountCommand
     consumer:
       group-id: ${spring.application.name:-default-group}
       auto-offset-reset: earliest
@@ -15,7 +15,7 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: ru.samara.pet.auth_service.model.dto
-        spring.json.type.mapping: event:ru.samara.pet.auth_service.model.dto.RegisterRequest
+        spring.json.type.mapping: event:ru.samara.pet.auth_service.model.dto.CreateAccountCommand
   threads:
     virtual:
       enabled: true  # для Tomcat

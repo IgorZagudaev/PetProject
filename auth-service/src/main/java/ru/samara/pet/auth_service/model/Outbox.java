@@ -58,6 +58,9 @@ public class Outbox {
     @Column(name = "processed")
     private boolean processed;
 
+    @Column(name = "retry_counter")
+    private Short retryCount = 0;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

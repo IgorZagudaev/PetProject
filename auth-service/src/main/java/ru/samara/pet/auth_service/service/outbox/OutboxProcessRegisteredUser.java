@@ -10,6 +10,8 @@ import ru.samara.pet.auth_service.model.Outbox;
 import ru.samara.pet.auth_service.model.dto.CreateAccountCommand;
 import ru.samara.pet.auth_service.repository.OutboxRepository;
 import ru.samara.pet.auth_service.service.integration.FeignRequestToCreateBankAccount;
+import ru.samara.pet.auth_service.service.integration.KafkaProducerService;
+import ru.samara.pet.auth_service.service.integration.KafkaRequestToCreateBankAccount;
 import ru.samara.pet.auth_service.service.integration.RequestToCreateBankAccount;
 
 import java.util.List;
@@ -20,7 +22,7 @@ public class OutboxProcessRegisteredUser implements OutboxProcessEvent {
 
     private final RequestToCreateBankAccount feignRequestToCreateBankAccount;
     private final OutboxRepository outboxRepository;
-    private final ObjectMapper objectMapper;
+    private final KafkaRequestToCreateBankAccount kafkaRequestToCreateBankAccount;
 
     @Transactional
     @Async("ioExecutor")
@@ -30,10 +32,16 @@ public class OutboxProcessRegisteredUser implements OutboxProcessEvent {
         List<Outbox> outboxListToProcess = outboxRepository.find100ToProcess();
         outboxListToProcess.forEach(outbox -> {
             try {
-                CreateAccountCommand createAccountCommand = new CreateAccountCommand(outbox.getId());
-                feignRequestToCreateBankAccount.sendRequestToCreateBankAccount(createAccountCommand);
+                outbox.setRetryCount((short)(outbox.getRetryCount()+ 1));
                 outbox.setProcessed(true);
+                CreateAccountCommand createAccountCommand = new CreateAccountCommand(outbox.getId());
+                if (!feignRequestToCreateBankAccount.sendRequestToCreateBankAccount(createAccountCommand)) {
+                    if (!kafkaRequestToCreateBankAccount.sendRequestToCreateBankAccount(createAccountCommand)) {
+                        outbox.setProcessed(false);
+                    }
+                }
             } catch (Exception e) {
+                outbox.setProcessed(false);
                 System.out.println("Error processing outbox event: " + e.getMessage());
             }
         });

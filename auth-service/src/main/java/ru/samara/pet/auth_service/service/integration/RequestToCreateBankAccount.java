@@ -4,5 +4,5 @@ import ru.samara.pet.auth_service.model.dto.CreateAccountCommand;
 
 public interface RequestToCreateBankAccount {
 
-    void sendRequestToCreateBankAccount (CreateAccountCommand createAccountCommand);
+    boolean sendRequestToCreateBankAccount (CreateAccountCommand createAccountCommand);
 }

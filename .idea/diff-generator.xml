@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DiffGenerationConfig">
+    <option name="sourceModelValue" value="auth-service:auth-service" />
+    <option name="targetDbValue" value="ae3ccdad-59b3-41cc-9a0d-c9e7ac818f35__auth_db_public" />
+  </component>
+</project>

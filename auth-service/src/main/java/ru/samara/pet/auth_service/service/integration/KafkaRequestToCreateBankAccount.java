@@ -14,7 +14,8 @@ public class KafkaRequestToCreateBankAccount implements RequestToCreateBankAccou
     private final KafkaProducerService kafkaProducerService;
 
     @Override
-    public void sendRequestToCreateBankAccount(CreateAccountCommand createAccountCommand) {
-
+    public boolean sendRequestToCreateBankAccount(CreateAccountCommand createAccountCommand) {
+        kafkaProducerService.sendEventCreateAccount(createAccountCommand);
+        return true;
     }
 }
